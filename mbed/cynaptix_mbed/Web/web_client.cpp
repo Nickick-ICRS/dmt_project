@@ -3,7 +3,9 @@
 WebClient::WebClient(PinName tx, PinName rx, PinName reset, 
                      CommandProcessor *cmd)
         :reset_(reset), error_(""), cmd_(cmd),
-         esp_bs_(tx, rx), esp_(esp_bs_, "\r\n", 128) {
+         esp_bs_(tx, rx), esp_(esp_bs_, "\r\n", 128),
+         recv_led_(LED3) {
+    recv_led_ = 1;
     // Hardware reset
     reset_ = 0;
 
@@ -23,12 +25,15 @@ WebClient::WebClient(PinName tx, PinName rx, PinName reset,
 
     // Wait for ESP-01
     while(!(esp_.send("AT") && esp_.recv("OK"))) {
-        pc.printf("waiting for esp...");
+        //pc.printf("waiting for esp...");
     }
     pc.printf("ESP OK");
 
     // Turn off AT command echoing
     esp_.send("ATE0") && esp_.recv("OK");
+
+    connect_to_network();
+    connect_TCP();
 
     // Wait for connection
     while(!check_connection_status()) {
@@ -36,7 +41,8 @@ WebClient::WebClient(PinName tx, PinName rx, PinName reset,
         if(err != "")
             pc.printf("%s", err.c_str());
     }
-    pc.printf("connected");
+    // pc.printf("connected");
+    recv_led_ = 0;
 }
 
 WebClient::~WebClient() {
@@ -68,6 +74,7 @@ void WebClient::update() {
     int len;
     // Read incoming TCP messages if existant
     if(esp_.recv("+IPD,%d:", &len)) {
+        recv_led_ = !recv_led_;
         esp_.read(buf_, len);
         // Add data read to the storage string
         for(char i = 0; i < len && i < 64; i++) {
@@ -109,21 +116,21 @@ void WebClient::update() {
 }
 
 bool WebClient::connect_to_network() {
-    bool ret = true;
+    bool ret = false;
     
     // Longer timeout
     esp_.setTimeout(8000);
     
     // Try to connect
-    if(!(esp_.send("AT+CWJAP=\"%s\",\"%s\"", SSID, PWD) && 
-         esp_.recv("OK")))
-        ret = false;
+    if(esp_.send("AT+CWJAP=\"%s\",\"%s\"", SSID, PWD) && 
+         esp_.recv("OK"))
+        ret = true;
     
     // Reset timeout
     esp_.setTimeout(DEFAULT_TIMEOUT);
 
     if(ret)
-        pc.printf("Successfully connected to \"%s\".\n", SSID);
+        //pc.printf("Successfully connected to \"%s\".\n", SSID);
 
     return ret;
 }
@@ -157,8 +164,8 @@ bool WebClient::connect_TCP() {
     // Reset timeout
     esp_.setTimeout(DEFAULT_TIMEOUT);
 
-    if(ret) 
-        pc.printf("Successfully connected to \"%s\".\n", REMOTE_IP);
+    if(ret) {}
+        //pc.printf("Successfully connected to \"%s\".\n", REMOTE_IP);
     else
         pc.printf("Failed to connect to \"%s\".\n", REMOTE_IP);
 
@@ -181,7 +188,7 @@ bool WebClient::check_connection_status() {
     case 2:
     // TCP or UDP is disconnected
     case 4:
-        //connect_to_network();
+        connect_to_network();
         if(!connect_TCP())
             set_error("Lost connection with '" + (std::string)REMOTE_IP + "'.");
         else

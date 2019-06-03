@@ -25,7 +25,6 @@ TactileController::~TactileController() {
 
 void TactileController::set_motor_power(char motor_power, 
                                         VibrationMotor motor) {
-    pc.printf("Motor %d:%d\n", (short)motor, motor_power);
     switch(motor) {
     // Thumb left is the '0th' motor (it's on the 2nd multiplexer)
     case TMB_L:

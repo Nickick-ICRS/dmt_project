@@ -60,8 +60,12 @@ void Drv2605::set_mode(char mode) {
 }
 
 void Drv2605::set_realtime_value(char value) {
-    set_mode(DRV2605_MODE_REALTIME);
-    write_register(DRV2605_REG_RTPIN, value);
+    if(value < 128)
+        set_mode(DRV2605_MODE_INTTRIG);
+    else {
+        set_mode(DRV2605_MODE_REALTIME);
+        write_register(DRV2605_REG_RTPIN, value);
+    }
 }
 
 char Drv2605::read_register(char reg) {

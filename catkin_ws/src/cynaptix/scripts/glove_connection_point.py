@@ -33,13 +33,12 @@ def process_connection(conn, rate):
         msg = mp.get_glove_message()
         try:
             conn.sendall(msg)
-            rospy.loginfo(''.join('0x{:02X} '.format(x) for x in msg))
         except socket.timeout:
             rospy.loginfo("Connection timed out.")
-            listener_running = False
+            return
         except socket.error as e:
             rospy.loginfo("Unknown error: %s", e)
-            listener_running = False
+            return
 
         time_keeper.sleep()
 
@@ -63,6 +62,9 @@ if __name__ == "__main__":
     if rate == 0:
         rospy.logwarn("Failed to get param 'communication_frequency', using default of 10 Hz.")
         rate = 10
+
+    # Convert to time period
+    rate = 1.0 / rate
 
     # Get the timeout value
     timeout = rospy.get_param("~connection_timeout", 0)

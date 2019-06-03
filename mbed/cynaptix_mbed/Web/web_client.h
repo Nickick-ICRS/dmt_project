@@ -67,6 +67,8 @@ private:
 
     // To process received messages
     CommandProcessor *cmd_;
+
+    DigitalOut recv_led_;
 };
 
 #endif // __WEB_CLIENT_H__

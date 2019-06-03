@@ -3,7 +3,7 @@
     <node pkg="cynaptix" type="glove_connection_point.py" 
           name="haptic_glove" output="screen" respawn="true">
         <param name="port" value="25565"/>
-        <param name="communication_frequency" value="5"/>
+        <param name="communication_frequency" value="1"/>
         <param name="connection_timeout" value="0.3"/>
         <param name="hostname" value="10.42.0.1"/>
     </node>

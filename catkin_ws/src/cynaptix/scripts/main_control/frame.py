@@ -6,9 +6,9 @@ from cynaptix.msg import FrameMeasuredData
 
 class Frame(object):
     def __init__(self):
-        self._motor_torques = [0, 0, 0]
-        self._motor_pos = [0, 0, 0]
-        self._target_motor_pos = [0, 0, 0]
+        self._motor_torques = [0, 0, 0, 0, 0]
+        self._motor_pos = [0, 0, 0, 0, 0]
+        self._target_motor_pos = [0, 0, 0, 0, 0]
         self._sub = rospy.Subscriber('frame_measured_data',
                                      FrameMeasuredData,
                                      self.data_measured_callback)

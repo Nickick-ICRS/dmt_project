@@ -19,15 +19,15 @@ char ssid[32] = "nickick-laptop";
 char pwd[32] = "auSEtdYV";
 
 bool connect_to_network() {
-    bool ret = true;
+    bool ret = false;
     
     // Longer timeout
     esp->setTimeout(8000);
     
     // Try to connect
-    if(!(esp->send("AT+CWJAP_CUR=\"%s\",\"%s\"", ssid, pwd) && 
-         esp->recv("OK")))
-        ret = false;
+    if(esp->send("AT+CWJAP=\"%s\",\"%s\"", ssid, pwd) && 
+         esp->recv("OK"))
+        ret = true;
     
     // Reset timeout
     esp->setTimeout(DEFAULT_TIMEOUT);
@@ -101,6 +101,7 @@ bool check_connection_status() {
     // TCP or UDP is disconnected
     case 4:
         pc.printf("TCP disconnected...");
+        // Try connecting to network, as occasionally this status is thrown when network connection failed too
         if(!connect_TCP())
             pc.printf("Lost connection with \"%s\".\n", REMOTE_IP);
         else {
@@ -158,8 +159,8 @@ void setup() {
     // Turn off AT command echoing
     esp->send("ATE0") && esp->recv("OK");
 
-    connect_to_network();
-    connect_TCP();
+    while(!connect_to_network());
+    while(!connect_TCP());
 
     // Check status
     while(!check_connection_status());

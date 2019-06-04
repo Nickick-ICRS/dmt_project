@@ -63,9 +63,6 @@ if __name__ == "__main__":
         rospy.logwarn("Failed to get param 'communication_frequency', using default of 10 Hz.")
         rate = 10
 
-    # Convert to time period
-    rate = 1.0 / rate
-
     # Get the timeout value
     timeout = rospy.get_param("~connection_timeout", 0)
     if timeout == 0:

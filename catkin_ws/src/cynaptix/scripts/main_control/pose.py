@@ -16,5 +16,5 @@ class Pose(object):
                                                  rospy.Time(0))
             self._pose = pose
         except tf2_ros.TransformException:
-            print("Glove transform not yet published.")
+            pass
         return self._pose

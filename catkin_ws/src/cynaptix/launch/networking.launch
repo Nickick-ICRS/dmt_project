@@ -8,12 +8,7 @@
         <param name="hostname" value="10.42.0.1"/>
     </node>
 
-    <!-- Network connection to the robot frame -->
-    <node pkg="cynaptix" type="frame_connection_point.py"
-          name="frame_bot" output="screen" respawn="true">
-        <param name="port" value="25566"/>
-        <param name="communication_frequency" value="5"/>
-        <param name="connection_timeout" value="0.3"/>
-        <param name="hostname" value="10.42.0.1"/>
-    </node>
+    <!-- Hardware connection to the robot frame -->
+    <node pkg="rosserial_python" type="serial_node.py"
+          name="frame" output="screen" respawn="true"/>
 </launch>

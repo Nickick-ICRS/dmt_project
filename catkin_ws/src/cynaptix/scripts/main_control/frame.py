@@ -16,58 +16,58 @@ class Frame(object):
                                     FrameTarget,
                                     queue_size=1)
         self._lock = threading.Lock()
+        self._thread = threading.Thread(target=self._publish_data)
+        self._thread.daemon = True
+        self._thread.start()
 
     def data_measured_callback(self, data):
         # Prevent race conditions
-        self._lock.acquire()
-        self._motor_pos = [data.x_pos,
-                           data.y_pos,
-                           data.z_pos,
-                           data.theta_pos,
-                           data.grabber_pos]
-        self._motor_torques = [data.x_torque,
-                               data.y_torque,
-                               data.z_torque,
-                               data.theta_torque,
-                               data.grabber_torque]
-        self._lock.release()
+        with self._lock:
+            self._motor_pos = [data.x_pos,
+                               data.y_pos,
+                               data.z_pos,
+                               data.theta_pos,
+                               data.grabber_pos]
+            self._motor_torques = [data.x_torque,
+                                   data.y_torque,
+                                   data.z_torque,
+                                   data.theta_torque,
+                                   data.grabber_torque]
 
         # Send current targets back
-        self.publish_data()
+        #self.publish_data()
 
-    def publish_data(self):
-        msg = FrameTarget()
-        # Prevent race conditions
-        self._lock.acquire()
-        msg.x_pos = self._target_motor_pos[0]
-        msg.y_pos = self._target_motor_pos[1]
-        msg.z_pos = self._target_motor_pos[2]
-        msg.theta_pos = self._target_motor_pos[3]
-        msg.grabber_pos = self._target_motor_pos[4]
-        self._lock.release()
+    def _publish_data(self):
+        rate = rospy.Rate(10)
+        while not rospy.is_shutdown():
+            msg = FrameTarget()
+            # Prevent race conditions
+            with self._lock:
+                msg.x_pos = self._target_motor_pos[0]
+                msg.y_pos = self._target_motor_pos[1]
+                msg.z_pos = self._target_motor_pos[2]
+                msg.theta_pos = self._target_motor_pos[3]
+                msg.grabber_pos = self._target_motor_pos[4]
+
+            self._pub.publish(msg)
+            rate.sleep()
 
     def get_motor_pos(self):
         # Prevent race conditions
-        self._lock.acquire()
-        pos = self._motor_pos
-        self._lock.release()
+        with self._lock:
+            pos = self._motor_pos
+
         return pos
 
     def get_motor_torques(self):
         # Prevent race conditions
-        self._lock.acquire()
-        torques = self._motor_torques
-        self._lock.release()
+        with self._lock:
+            torques = self._motor_torques
+
         return torques
 
     def set_motor_target(self, targets):
         # Prevent race conditions
-        self._lock.acquire()
-        self._target_motor_pos = targets
-        self._lock.release()
-
-    def set_vibration_values(self, vibrations):
-        # Prevent race conditions
-        self._lock.acquire()
-        self._vibrations = vibrations
-        self._lock.release()
+        with self._lock:
+            for i in range(5):
+                self._target_motor_pos[i] = targets[i]
